@@ -2,6 +2,7 @@ package pers.hry.queue.impl;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import pers.hry.queue.IQueue;
@@ -37,18 +38,22 @@ public class FlashQueueByGrowUp<T> implements IQueue<T> {
     * 获取队列
     */
    
+   private void setIng(int i){
+	   while(i>ing){
+		   ing=i;
+	   }
+   }
+   
    public  T[]  getQueue(){
 	   
-	   ing=0;
+	    
 	   
 	   T[] oqueue=queue;
  
 	   T[] tmp = (T[]) Array.newInstance(type, mSize);  
-	   while(ing!=0){
-		   ing=0;
-	   }
+	   
 	   queue=tmp;
-	 
+       int i=ing;		 
 	   qIndex=new AtomicInteger(0);
 	
 	   return  oqueue;
@@ -61,12 +66,12 @@ public class FlashQueueByGrowUp<T> implements IQueue<T> {
 	   if(backup==1){
 		   int i=qIndex.incrementAndGet();
 		   if(i>mSize-1){
-			   grawup(); 
+			   growup(); 
 		   }
 		   if(queue[i]==null){
 			   if(backup==1){
 				   queue[i]=t;
-				   ing=i;
+				 //  setIng(i);
 				   return ;
 			   }
 		   }
@@ -77,7 +82,7 @@ public class FlashQueueByGrowUp<T> implements IQueue<T> {
    /**
     * 队列增长
     */
-   private void grawup(){
+   private void growup(){
 	   backup=0;
 	   mSize=mSize+step;
 	   System.out.println("group-up");

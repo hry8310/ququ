@@ -2,8 +2,10 @@ package pers.hry.queue.impl;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import pers.hry.queue.Customer;
 import pers.hry.queue.IQueue;
 
 /**
@@ -24,6 +26,7 @@ public class FlashQueueByBackup<T> implements IQueue<T> {
 	/*其中一次队列的已赋值下标*/
 	private volatile int ing;
 	private ArrayList<T> backUps=new  ArrayList<T>();
+	Customer<T> cust;
 	public FlashQueueByBackup(Class<T> _type, int length){  
 	   type=_type;
 	   qSize=length;
@@ -31,7 +34,17 @@ public class FlashQueueByBackup<T> implements IQueue<T> {
 	   this.queue = (T[]) Array.newInstance(type, qSize);  
 	   qIndex=new AtomicInteger(0);
    }
+	
+	public void setCust(Customer<T> _cust){
+		cust=_cust;
+	}
    
+   private void setIng(int i){
+	   while(i>ing){
+		   ing=i;
+	   }
+   }
+	
 	@Override
    public void add(T t){  
 	  
@@ -39,26 +52,35 @@ public class FlashQueueByBackup<T> implements IQueue<T> {
       if(i<mSize){
     	  if(queue[i]==null){
     		  queue[i]=t;
-    		  ing=i;
+    		  setIng(i);
     	  }else{
     		  add(t);
     	  }
       }else{
     	  //如果已经满了，放入后备队列
     	  putToBackUp(t);
+    	 
+    	 
       }
    }  
    
 	@Override
    public    T[] getQueue(){
 	   T[] ts=  getQueues();
+	    
 	   ArrayList<T> at=getBackUp();
-	   for(T t:ts){
+	   if(at.isEmpty()){
+		   return Arrays.copyOf(ts, mSize);
+	   }
+	   for(int i=0;i<mSize;i++){
+		   T t=ts[i];
 		   if(t!=null){
 			   at.add(t);
 		   }
 	   }
 	   return ( T[] )at.toArray( (T[]) Array.newInstance(type, at.size()));
+	   
+	 //  return ts;
    }
    
    /**
@@ -84,7 +106,7 @@ public class FlashQueueByBackup<T> implements IQueue<T> {
     * 放入后备队列
     * */
    private synchronized  void putToBackUp(T t){
-	
+	   System.out.println("ddddddddd");
 	   backUps.add(t);
    }
    
